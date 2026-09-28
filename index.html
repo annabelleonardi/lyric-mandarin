@@ -817,6 +817,19 @@
       color: var(--amber);
       white-space: nowrap;
     }
+    .head-cta {
+      margin-top: 24px;
+    }
+    .step a,
+    .install-note a {
+      color: var(--accent-2);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .step a:hover,
+    .install-note a:hover {
+      text-decoration: underline;
+    }
 
     /* privacy */
     .privacy {
@@ -1409,12 +1422,20 @@
         <span class="eyebrow">Install</span>
         <h2>Set up in under two minutes</h2>
         <p class="section-sub">LyricMandarin installs directly into Chrome — no store waitlist, no account.</p>
+        <div class="head-cta">
+          <a class="btn btn-primary" href="https://github.com/annabelleonardi/lyric-mandarin/releases/latest/download/LyricMandarin-Chrome-v1.0.0.zip">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 3v10.6l3.8-3.8 1.4 1.4-6.2 6.2-6.2-6.2 1.4-1.4 3.8 3.8V3h2zM4 19h16v2H4v-2z"/>
+            </svg>
+            Download LyricMandarin for Chrome
+          </a>
+        </div>
       </div>
       <div class="install-grid">
         <div class="step reveal">
           <span class="step-num">1</span>
           <h3>Get the package</h3>
-          <p>Download the LyricMandarin extension folder (<code>build/chrome-mv3-prod</code>) and keep it somewhere handy — it's all you need.</p>
+          <p><a href="https://github.com/annabelleonardi/lyric-mandarin/releases/latest/download/LyricMandarin-Chrome-v1.0.0.zip">Download the zip</a> and unzip it — you'll get a folder named <code>build/chrome-mv3-prod</code>. That's all you need.</p>
         </div>
         <div class="step reveal">
           <span class="step-num">2</span>
@@ -1474,6 +1495,7 @@
         <a href="#features">Features</a>
         <a href="#demo">Live demo</a>
         <a href="#install">Install</a>
+        <a href="https://github.com/annabelleonardi/lyric-mandarin" target="_blank" rel="noopener">GitHub</a>
       </nav>
     </div>
     <div class="footer-base">
