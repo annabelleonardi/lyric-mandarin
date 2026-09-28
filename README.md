@@ -36,7 +36,7 @@ Listening practice is the most natural way to acquire a language — but song ly
 ## Build from source
 
 ```bash
-git clone https://github.com/<your-username>/lyric-mandarin.git
+git clone https://github.com/annabelleonardi/lyric-mandarin.git
 cd lyric-mandarin
 npm install
 npm run build
