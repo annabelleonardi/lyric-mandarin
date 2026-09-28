@@ -1229,6 +1229,7 @@
         .c-mid { background: #d97706; }
         .c-hard { background: #7c3aed; }
         .ld-cta { margin-top: 16px; text-align: center; font-size: 13.5px; }
+        .ld-note { margin: 0 0 10px; text-align: center; font-size: 12px; color: rgba(242,242,247,.45); }
       </style>
 
       <div class="ld-wrap">
@@ -1238,7 +1239,7 @@
         <div class="ld-ctrl">
           <button class="ld-btn" id="ld-play">▶ Play synced</button>
           <button class="ld-btn ghost" id="ld-stop">Reset</button>
-          <span class="ld-hint">If the player stays silent, click its own play button, then hit “Play synced” again.</span>
+          <span class="ld-hint">No sound? Press ▶ inside the player above, then hit “Play synced” again.</span>
         </div>
         <div class="ld-box" id="ld-box"></div>
         <p class="ld-trans" id="ld-trans"></p>
@@ -1247,6 +1248,7 @@
           <span><i style="background:#fbbf24"></i>HSK 4–5</span>
           <span><i style="background:#c084fc"></i>HSK 6+ / slang</span>
         </div>
+        <p class="ld-note">Sound blocked? NetEase restricts playback outside mainland China and without a NetEase login — the lyric sync demo works either way.</p>
         <p class="ld-cta">That’s one song. The extension does <b>every</b> song on NetEase &amp; YouTube — <a href="#install">install it and play yours</a>.</p>
       </div>
       <div class="ld-card" id="ld-card"></div>
@@ -1380,6 +1382,7 @@
           frame.src = PLAYER_BASE + "&auto=1&t=" + Date.now();
           t = 0;
           setIdx(-1);
+          trans.textContent = "♪ Intro playing — first lyric at 0:12";
           if (timer) clearInterval(timer);
           timer = setInterval(tick, 250);
         }
