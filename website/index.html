@@ -1195,18 +1195,16 @@
     <div class="container">
       <div class="section-head reveal">
         <h2>Try it live — no install needed</h2>
-        <p class="section-sub">The core loop, right here: real studio audio via NetEase's official player, official timed lyrics, and every word tagged by HSK level. Hover any colored word to learn it.</p>
+        <p class="section-sub">The core loop, right here: a traditional Chinese folk melody with synced lyrics and every word tagged by HSK level. Hover any colored word to learn it.</p>
       </div>
 
       <style>
         .ld-wrap { max-width: 640px; margin: 0 auto; }
-        .ld-player { margin-bottom: 14px; border: 1px solid rgba(242,242,247,.14); border-radius: 10px; overflow: hidden; }
-        .ld-ctrl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-        .ld-btn { padding: 9px 18px; border: none; border-radius: 8px; background: #e63946; color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; }
-        .ld-btn:hover { background: #d02f3c; }
-        .ld-btn.ghost { background: transparent; border: 1px solid rgba(242,242,247,.25); color: #f2f2f7; font-weight: 600; }
-        .ld-btn.ghost:hover { border-color: #e63946; color: #e63946; background: transparent; }
-        .ld-hint { font-size: 12px; color: rgba(242,242,247,.55); }
+        .ld-song { margin-bottom: 14px; padding: 14px 16px; border: 1px solid rgba(242,242,247,.14); border-radius: 12px; background: linear-gradient(160deg, #232331, #1d1d27 70%); }
+        .ld-songname { font-size: 14.5px; font-weight: 700; }
+        .ld-songname span { margin-left: 8px; font-weight: 500; font-size: 12.5px; color: rgba(242,242,247,.55); }
+        .ld-song audio { width: 100%; margin-top: 10px; height: 40px; }
+        .ld-hint { margin: 0 0 10px; font-size: 12px; color: rgba(242,242,247,.55); text-align: center; }
         .ld-box { height: 260px; overflow-y: auto; padding: 14px 10px; border: 1px solid rgba(242,242,247,.12); border-radius: 12px; background: #1d1d27; }
         .ld-line { padding: 7px 12px; border-radius: 8px; font-size: 17px; line-height: 1.55; opacity: .5; transition: opacity .25s, background .25s; }
         .ld-line.ld-on { opacity: 1; background: rgba(230,57,70,.14); }
@@ -1233,14 +1231,11 @@
       </style>
 
       <div class="ld-wrap">
-        <div class="ld-player">
-          <iframe id="ld-frame" width="100%" height="66" frameborder="no" allow="autoplay; encrypted-media" title="月亮代表我的心 — Teresa Teng (NetEase player)"></iframe>
+        <div class="ld-song">
+          <div class="ld-songname">《茉莉花》<span>Jasmine Flower · traditional Chinese folk song</span></div>
+          <audio id="ld-audio" controls preload="metadata" src="./molihua.m4a"></audio>
         </div>
-        <div class="ld-ctrl">
-          <button class="ld-btn" id="ld-play">▶ Play synced</button>
-          <button class="ld-btn ghost" id="ld-stop">Reset</button>
-          <span class="ld-hint">No sound? Press ▶ inside the player above, then hit “Play synced” again.</span>
-        </div>
+        <p class="ld-hint">▶ Press play — lyrics follow the melody. Hover any colored word to learn it.</p>
         <div class="ld-box" id="ld-box"></div>
         <p class="ld-trans" id="ld-trans"></p>
         <div class="ld-legend">
@@ -1248,7 +1243,7 @@
           <span><i style="background:#fbbf24"></i>HSK 4–5</span>
           <span><i style="background:#c084fc"></i>HSK 6+ / slang</span>
         </div>
-        <p class="ld-note">Sound blocked? NetEase restricts playback outside mainland China and without a NetEase login — the lyric sync demo works either way.</p>
+        <p class="ld-note">Traditional folk melody (public domain), rendered as an instrumental. The extension itself uses official studio audio and timed lyrics on NetEase &amp; YouTube.</p>
         <p class="ld-cta">That’s one song. The extension does <b>every</b> song on NetEase &amp; YouTube — <a href="#install">install it and play yours</a>.</p>
       </div>
       <div class="ld-card" id="ld-card"></div>
@@ -1256,64 +1251,36 @@
       <script>
       (function () {
         var DICT = {
-          "你": ["nǐ", 1, "you"], "问": ["wèn", 2, "to ask"], "我": ["wǒ", 1, "I; me"],
-          "爱": ["ài", 1, "to love; love"], "有": ["yǒu", 1, "to have; there is"],
-          "多": ["duō", 2, "how (much / many)"], "深": ["shēn", 3, "deep"],
-          "几分": ["jǐ fēn", 3, "how much; somewhat"], "的": ["de", 1, "possessive particle"],
-          "情": ["qíng", 4, "feeling; affection"], "也": ["yě", 2, "also; too"],
-          "真": ["zhēn", 3, "true; real"], "月亮": ["yuè liang", 4, "the moon"],
-          "代表": ["dài biǎo", 4, "to represent"], "心": ["xīn", 3, "heart; mind"],
-          "不": ["bù", 1, "not"], "移": ["yí", 5, "to move; to waver"],
-          "变": ["biàn", 4, "to change"], "轻轻": ["qīng qīng", 3, "gently; softly"],
-          "一个": ["yí ge", 1, "a; one"], "吻": ["wěn", 5, "a kiss"],
-          "已经": ["yǐ jīng", 2, "already"], "打动": ["dǎ dòng", 5, "to move someone emotionally"],
-          "深深": ["shēn shēn", 3, "deeply"], "一段": ["yí duàn", 4, "a stretch / period of"],
-          "教": ["jiào", 5, "to make / let (literary)"], "思念": ["sī niàn", 5, "to miss; longing"],
-          "到": ["dào", 2, "to; until"], "如今": ["rú jīn", 5, "nowadays (literary)"],
-          "去": ["qù", 1, "to go"], "想一想": ["xiǎng yi xiǎng", 2, "think it over a bit"],
-          "看一看": ["kàn yi kàn", 1, "take a look"]
+          "好": ["hǎo", 1, "good; fine"], "一": ["yī", 1, "one"],
+          "一朵": ["yì duǒ", 2, "one (flower)"], "朵": ["duǒ", 2, "measure word for flowers"],
+          "茉莉花": ["mò lì huā", 6, "jasmine flower"], "满园": ["mǎn yuán", 3, "the whole garden"],
+          "花草": ["huā cǎo", 4, "flowers and plants"], "香": ["xiāng", 4, "fragrant"],
+          "也": ["yě", 2, "also; too"], "不过": ["bú guò", 3, "cannot surpass; but"],
+          "它": ["tā", 1, "it"], "我": ["wǒ", 1, "I; me"], "有": ["yǒu", 1, "to have"],
+          "有心": ["yǒu xīn", 3, "to be inclined to; tempted to"], "心": ["xīn", 3, "heart; mind"],
+          "采": ["cǎi", 5, "to pick; pluck"], "戴": ["dài", 4, "to wear (in the hair)"],
+          "又": ["yòu", 2, "yet; also"], "怕": ["pà", 3, "to be afraid"],
+          "看花": ["kàn huā", 3, "to admire flowers"], "看": ["kàn", 1, "to look at"],
+          "花": ["huā", 1, "flower"], "的": ["de", 1, "possessive particle"],
+          "人儿": ["rén ér", 2, "person (affectionate)"], "骂": ["mà", 5, "to scold"],
+          "呀": ["ya", 2, "particle (soft exclamation)"]
         };
-        // [time (s), line, line pinyin, translation] — official NetEase LRC timings
+        // [time (s), line, line pinyin, translation] — timestamps extracted from the melody phrases
         var LINES = [
-          [12.42, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
-          [18.38, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
-          [24.14, "我的情也真", "wǒ de qíng yě zhēn", "My affection is true"],
-          [26.99, "我的爱也真", "wǒ de ài yě zhēn", "My love is real"],
-          [30.04, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
-          [36.95, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
-          [43.01, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
-          [48.81, "我的情不移", "wǒ de qíng bù yí", "My affection never wavers"],
-          [51.56, "我的爱不变", "wǒ de ài bù biàn", "My love never changes"],
-          [54.87, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
-          [60.92, "轻轻的一个吻", "qīng qīng de yí ge wěn", "A gentle kiss"],
-          [67.03, "已经打动我的心", "yǐ jīng dǎ dòng wǒ de xīn", "Has already touched my heart"],
-          [73.09, "深深的一段情", "shēn shēn de yí duàn qíng", "A deep and lasting romance"],
-          [79.44, "教我思念到如今", "jiào wǒ sī niàn dào rú jīn", "That keeps me longing to this day"],
-          [86.16, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
-          [92.06, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
-          [97.87, "你去想一想", "nǐ qù xiǎng yi xiǎng", "Just think it over"],
-          [100.77, "你去看一看", "nǐ qù kàn yi kàn", "Just go and see for yourself"],
-          [103.78, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
-          [134.61, "轻轻的一个吻", "qīng qīng de yí ge wěn", "A gentle kiss"],
-          [140.57, "已经打动我的心", "yǐ jīng dǎ dòng wǒ de xīn", "Has already touched my heart"],
-          [146.68, "深深的一段情", "shēn shēn de yí duàn qíng", "A deep and lasting romance"],
-          [152.74, "教我思念到如今", "jiào wǒ sī niàn dào rú jīn", "That keeps me longing to this day"],
-          [159.30, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
-          [165.35, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
-          [171.21, "你去想一想", "nǐ qù xiǎng yi xiǎng", "Just think it over"],
-          [174.16, "你去看一看", "nǐ qù kàn yi kàn", "Just go and see for yourself"],
-          [177.17, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
-          [183.43, "你去想一想", "nǐ qù xiǎng yi xiǎng", "Just think it over"],
-          [186.48, "你去看一看", "nǐ qù kàn yi kàn", "Just go and see for yourself"],
-          [189.33, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"]
+          [1.43, "好一朵茉莉花", "hǎo yì duǒ mòlìhuā", "What a lovely jasmine flower"],
+          [5.43, "好一朵茉莉花", "hǎo yì duǒ mòlìhuā", "Oh, what a beautiful jasmine bloom"],
+          [20.19, "满园花草香也香不过它", "mǎn yuán huācǎo xiāng yě xiāng búguò tā", "Fragrance fills the garden, yet none smells sweeter than this one"],
+          [26.57, "我有心采一朵戴", "wǒ yǒuxīn cǎi yì duǒ dài", "I'm tempted to pick one and wear it"],
+          [32.69, "又怕看花的人儿骂", "yòu pà kànhuā de rénr mà", "But I'm afraid the flower admirers would scold me"],
+          [38.57, "茉莉花呀茉莉花", "mòlìhuā ya mòlìhuā", "Jasmine flower, oh jasmine flower"],
+          [44.69, "茉莉花呀茉莉花", "mòlìhuā ya mòlìhuā", "Jasmine flower, oh jasmine flower"]
         ];
 
-        var PLAYER_BASE = "https://music.163.com/outchain/player?type=2&id=1847408145&height=66&bgColor=1d1d27";
-        var frame = document.getElementById("ld-frame");
+        var audio = document.getElementById("ld-audio");
         var box = document.getElementById("ld-box");
         var trans = document.getElementById("ld-trans");
         var card = document.getElementById("ld-card");
-        var timer = null, t = 0, idx = -1;
+        var raf = null, idx = -1;
 
         function seg(line) {
           var out = [], i = 0;
@@ -1363,37 +1330,33 @@
             var target = box.scrollTop + (er.top - br.top) - br.height / 2 + er.height / 2;
             box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
           } else {
-            trans.textContent = "";
+            trans.textContent = audio && audio.currentTime > 0 ? "" : "▶ Press play — lyrics will follow the melody";
           }
         }
 
-        function tick() {
-          t += 0.25;
+        // Sync is driven by the audio element's own clock — scrubbing seeks the lyrics too.
+        function sync() {
+          var t = audio.currentTime;
           var next = -1;
           for (var i = 0; i < LINES.length; i++) {
-            if (LINES[i][0] <= t + 0.3) next = i; else break;
+            if (LINES[i][0] <= t + 0.15) next = i; else break;
           }
           setIdx(next);
+          if (!audio.paused) raf = requestAnimationFrame(sync);
         }
-
-        function play() {
-          // Reload the embed under the click gesture so autoplay is permitted;
-          // the studio recording starts at 0:00, so the timer syncs from 0.
-          frame.src = PLAYER_BASE + "&auto=1&t=" + Date.now();
-          t = 0;
+        audio.addEventListener("play", function () {
+          if (raf) cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(sync);
+        });
+        audio.addEventListener("pause", function () {
+          if (raf) cancelAnimationFrame(raf);
+          sync();
+        });
+        audio.addEventListener("seeked", sync);
+        audio.addEventListener("ended", function () {
           setIdx(-1);
-          trans.textContent = "♪ Intro playing — first lyric at 0:12";
-          if (timer) clearInterval(timer);
-          timer = setInterval(tick, 250);
-        }
-        function stop() {
-          if (timer) clearInterval(timer);
-          timer = null; t = 0;
-          setIdx(-1);
-          frame.src = PLAYER_BASE + "&auto=0&t=" + Date.now();
-        }
-        document.getElementById("ld-play").addEventListener("click", play);
-        document.getElementById("ld-stop").addEventListener("click", stop);
+          trans.textContent = "♪ That's the whole song — install the extension to learn with your own music.";
+        });
 
         function show(e) {
           var w = e.target && e.target.dataset && e.target.dataset.w;
@@ -1413,7 +1376,6 @@
         box.addEventListener("mouseover", show);
         box.addEventListener("mouseout", function () { card.style.display = "none"; });
         box.addEventListener("click", show);
-        frame.src = PLAYER_BASE + "&auto=0";
       })();
       </script>
     </div>
