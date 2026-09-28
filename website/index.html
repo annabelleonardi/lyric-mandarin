@@ -1004,6 +1004,7 @@
       <a href="#how">How it works</a>
       <a href="#features">Features</a>
       <a href="#demo">Live demo</a>
+      <a href="#workflow">Video</a>
       <a href="#install">Install</a>
     </div>
     <a class="btn btn-primary btn-sm" href="#install">
@@ -1226,6 +1227,13 @@
         .c-easy { background: #16a34a; }
         .c-mid { background: #d97706; }
         .c-hard { background: #7c3aed; }
+        .ld-deck { margin-left: auto; padding: 2px 10px; border: 1px solid rgba(230,57,70,.55); border-radius: 999px; color: #e63946; font-weight: 700; }
+        .ld-actions { display: flex; gap: 6px; margin-top: 8px; }
+        .ld-act { flex: 1; padding: 5px 8px; border-radius: 7px; border: 1px solid rgba(242,242,247,.18); background: transparent; color: rgba(242,242,247,.82); font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .ld-act:hover { border-color: rgba(242,242,247,.4); }
+        .ld-act.on { background: #e63946; border-color: #e63946; color: #fff; }
+        .ld-ainote { color: rgba(242,242,247,.92) !important; }
+        .ld-aitag { margin: 7px 0 0; font-size: 10.5px; color: rgba(242,242,247,.5) !important; }
         .ld-cta { margin-top: 16px; text-align: center; font-size: 13.5px; }
         .ld-note { margin: 0 0 10px; text-align: center; font-size: 12px; color: rgba(242,242,247,.45); }
       </style>
@@ -1242,8 +1250,9 @@
           <span><i style="background:#4ade80"></i>HSK 1–3</span>
           <span><i style="background:#fbbf24"></i>HSK 4–5</span>
           <span><i style="background:#c084fc"></i>HSK 6+ / slang</span>
+          <span class="ld-deck" id="ld-deck" hidden>🗂 Deck · <b id="ld-deck-n">0</b></span>
         </div>
-        <p class="ld-note">Traditional folk melody (public domain), rendered as an instrumental. The extension itself uses official studio audio and timed lyrics on NetEase &amp; YouTube.</p>
+        <p class="ld-note">Traditional folk melody (public domain), rendered as an instrumental. Save and ✦ AI explain above preview the extension's flashcard deck and its live AI explanations — powered by official studio audio and timed lyrics on NetEase &amp; YouTube.</p>
         <p class="ld-cta">That’s one song. The extension does <b>every</b> song on NetEase &amp; YouTube — <a href="#install">install it and play yours</a>.</p>
       </div>
       <div class="ld-card" id="ld-card"></div>
@@ -1358,11 +1367,36 @@
           trans.textContent = "♪ That's the whole song — install the extension to learn with your own music.";
         });
 
+        // Pre-baked examples of the extension's live AI explanations (context-aware, per song)
+        var AI_NOTES = {
+          "茉莉花": "A symbol of purity and modesty in Chinese culture. This tune reached Europe by the 1800s — Puccini later wove it into his opera Turandot.",
+          "骂": "In old village life, picking a neighbour's flowers could genuinely earn you a scolding. The line is playful teasing about courtship, not real fear.",
+          "戴": "戴花 — wearing a fresh flower in the hair — was a classic touch of everyday glamour for young women in traditional China.",
+          "有心": "Literally 'have the heart to' — to feel tempted. The singer is tempted by the flower and, the song hints, by someone too.",
+          "满园": "满 originally pictured water brimming over — hence 'full'. 满园 = the whole garden brimming with blossoms.",
+          "看花": "Flower-viewing has been a spring pastime since the Tang dynasty — the crowds the singer fears are the flower admirers."
+        };
+        var saved = [];
+        try { saved = JSON.parse(localStorage.getItem("lm-demo-deck") || "[]"); } catch (e) { saved = []; }
+        var deckChip = document.getElementById("ld-deck");
+        var deckN = document.getElementById("ld-deck-n");
+
+        function refreshDeck() {
+          deckN.textContent = saved.length;
+          deckChip.hidden = saved.length === 0;
+        }
+        refreshDeck();
+
         function show(e) {
           var w = e.target && e.target.dataset && e.target.dataset.w;
           if (!w) return;
           var d = DICT[w] || ["", 0, ""];
-          card.innerHTML = "<b>" + w + "</b><i>" + d[0] + "</i><span class='ld-chip c-" + bucket(d[1]) + "'>" + (d[1] === 0 ? "slang" : "HSK " + d[1]) + "</span><p>" + d[2] + "</p>";
+          var isSaved = saved.indexOf(w) !== -1;
+          card.innerHTML = "<b>" + w + "</b><i>" + d[0] + "</i><span class='ld-chip c-" + bucket(d[1]) + "'>" + (d[1] === 0 ? "slang" : "HSK " + d[1]) + "</span><p id='ld-def'>" + d[2] + "</p>" +
+            "<div class='ld-actions'>" +
+            "<button class='ld-act" + (isSaved ? " on" : "") + "' id='ld-save' data-w='" + w + "'>" + (isSaved ? "✓ Saved" : "＋ Save to Deck") + "</button>" +
+            (AI_NOTES[w] ? "<button class='ld-act' id='ld-ai' data-w='" + w + "'>✦ AI explain</button>" : "") +
+            "</div>";
           card.style.display = "block";
           var x = Math.min(Math.max(8, e.clientX + 14), window.innerWidth - card.offsetWidth - 8);
           var y = e.clientY - card.offsetHeight - 14;
@@ -1373,11 +1407,54 @@
           card.style.left = x + "px";
           card.style.top = y + "px";
         }
+        card.addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest(".ld-act") : null;
+          if (!btn) return;
+          var w = btn.dataset.w;
+          if (btn.id === "ld-save") {
+            var i = saved.indexOf(w);
+            if (i === -1) { saved.push(w); btn.textContent = "✓ Saved"; btn.classList.add("on"); }
+            else { saved.splice(i, 1); btn.textContent = "＋ Save to Deck"; btn.classList.remove("on"); }
+            try { localStorage.setItem("lm-demo-deck", JSON.stringify(saved)); } catch (err) {}
+            refreshDeck();
+          } else if (btn.id === "ld-ai") {
+            var def = document.getElementById("ld-def");
+            def.textContent = AI_NOTES[w];
+            def.className = "ld-ainote";
+            var tag = document.createElement("p");
+            tag.className = "ld-aitag";
+            tag.textContent = "✦ In the extension, AI writes this from the song's context.";
+            btn.parentNode.insertBefore(tag, btn.parentNode.firstChild);
+            btn.disabled = true;
+            btn.style.opacity = ".45";
+          }
+        });
         box.addEventListener("mouseover", show);
         box.addEventListener("mouseout", function () { card.style.display = "none"; });
         box.addEventListener("click", show);
       })();
       </script>
+    </div>
+  </section>
+
+  <section class="workflow" id="workflow">
+    <style>
+      .wf-frame { max-width: 880px; margin: 0 auto; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--panel); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45); }
+      .wf-frame video { display: block; width: 100%; height: auto; }
+      .wf-cap { margin: 14px auto 0; max-width: 640px; text-align: center; font-size: 12.5px; color: var(--faint); }
+    </style>
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Full workflow</span>
+        <h2>From song to study deck in 40 seconds</h2>
+        <p class="section-sub">The extension running on a real song page — synced overlay lyrics, AI word explanations, Save to Deck, and CSV export ready for Anki.</p>
+      </div>
+      <div class="wf-frame reveal">
+        <video autoplay muted loop playsinline preload="metadata" poster="./workflow-poster.jpg" aria-label="LyricMandarin running on NetEase Cloud Music">
+          <source src="./workflow.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <p class="wf-cap reveal">Recorded on NetEase Cloud Music — the same overlay works on YouTube, with lyrics auto-fetched and time-synced.</p>
     </div>
   </section>
 
