@@ -8,6 +8,8 @@ A Chrome extension that turns any Chinese song on YouTube or NetEase Cloud Music
 
 `v1.0.0` · Chrome (Manifest V3) · Free
 
+**[→ Website & live demo](https://annabelleonardi.github.io/lyric-mandarin/)**
+
 </div>
 
 ---
