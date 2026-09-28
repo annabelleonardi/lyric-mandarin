@@ -12,6 +12,8 @@
 # misc
 .DS_Store
 *.pem
+*.mov
+*.zip
 
 # debug
 npm-debug.log*
@@ -30,4 +32,4 @@ dist/
 .plasmo
 
 # typescript
-.tsbuildinfo
+*.tsbuildinfo

@@ -1,8 +1,8 @@
 {
-  "name": "buy-stale-insect",
-  "displayName": "Buy stale insect",
-  "version": "0.0.1",
-  "description": "A basic Plasmo extension.",
+  "name": "lyric-mandarin",
+  "displayName": "LyricMandarin",
+  "version": "1.0.0",
+  "description": "Learn Mandarin from song lyrics — pinyin, HSK level, and cultural meaning.",
   "author": "Annabel",
   "scripts": {
     "dev": "plasmo dev",
@@ -24,8 +24,15 @@
     "typescript": "5.3.3"
   },
   "manifest": {
+    "permissions": [
+      "storage"
+    ],
     "host_permissions": [
-      "https://*/*"
+      "https://music.163.com/*",
+      "https://www.youtube.com/*",
+      "https://www.youtube-nocookie.com/*",
+      "https://api.deepseek.com/*",
+      "https://api.openai.com/*"
     ]
   }
 }

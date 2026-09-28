@@ -1,0 +1,1511 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LyricMandarin — Learn Mandarin with the songs you love</title>
+  <meta
+    name="description"
+    content="The Chrome extension that turns any Chinese song on YouTube or NetEase Cloud Music into an interactive lesson: real-time pinyin, HSK-graded vocabulary, AI cultural insights, and a flashcard deck you can export to Anki."
+  />
+  <meta name="theme-color" content="#0d0d14" />
+  <meta property="og:title" content="LyricMandarin — Learn Mandarin with the songs you love" />
+  <meta property="og:description" content="Real-time pinyin, HSK color grading, and AI cultural insights — right where the music plays." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/png" href="./icon.png" />
+  <style>
+    :root {
+      --accent: #e63946;
+      --accent-2: #ff5c5c;
+      --accent-hover: #d02f3c;
+      --bg: #0d0d14;
+      --bg-2: #12121b;
+      --panel: #171722;
+      --panel-2: #1d1d2a;
+      --line: rgba(242, 242, 247, 0.08);
+      --line-strong: rgba(242, 242, 247, 0.14);
+      --text: #f2f2f7;
+      --muted: rgba(242, 242, 247, 0.64);
+      --faint: rgba(242, 242, 247, 0.42);
+      --green: #4ade80;
+      --amber: #fbbf24;
+      --purple: #c084fc;
+      --green-bg: rgba(22, 163, 74, 0.16);
+      --amber-bg: rgba(217, 119, 6, 0.16);
+      --purple-bg: rgba(124, 58, 237, 0.2);
+      --radius: 16px;
+      --shadow-lg: 0 24px 70px rgba(0, 0, 0, 0.5);
+      --shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "Segoe UI", Roboto, "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+    }
+    section {
+      scroll-margin-top: 92px;
+    }
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    ::selection {
+      background: rgba(230, 57, 70, 0.4);
+    }
+
+    /* ---------- scroll reveal ---------- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: none;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+      .reveal {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+      }
+    }
+
+    /* ---------- nav ---------- */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 14px 24px;
+      background: rgba(13, 13, 20, 0.75);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.25s, background 0.25s;
+    }
+    .nav.scrolled {
+      background: rgba(13, 13, 20, 0.88);
+      border-bottom-color: var(--line);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+    .brand-glyph {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(230, 57, 70, 0.25), rgba(230, 57, 70, 0.08));
+      border: 1px solid rgba(230, 57, 70, 0.55);
+      color: var(--accent-2);
+      font-size: 17px;
+      font-weight: 700;
+      box-shadow: 0 0 18px rgba(230, 57, 70, 0.25);
+    }
+    .nav-links {
+      display: flex;
+      gap: 26px;
+      margin-left: auto;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    /* ---------- buttons ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 26px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: background 0.18s, border-color 0.18s, color 0.18s,
+        transform 0.18s, box-shadow 0.18s;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      color: #fff;
+      box-shadow: 0 8px 26px rgba(230, 57, 70, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(230, 57, 70, 0.45);
+    }
+    .btn-ghost {
+      border-color: var(--line-strong);
+      color: var(--text);
+      background: rgba(242, 242, 247, 0.03);
+    }
+    .btn-ghost:hover {
+      border-color: rgba(242, 242, 247, 0.32);
+      background: rgba(242, 242, 247, 0.06);
+    }
+    .btn-sm {
+      padding: 9px 18px;
+      font-size: 13.5px;
+      border-radius: 8px;
+    }
+    .btn svg {
+      flex: none;
+    }
+
+    /* ---------- hero ---------- */
+    .hero {
+      position: relative;
+      padding: 104px 0 96px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+          720px 400px at 14% -6%,
+          rgba(230, 57, 70, 0.18),
+          transparent 68%
+        ),
+        radial-gradient(
+          560px 340px at 92% 10%,
+          rgba(124, 58, 237, 0.12),
+          transparent 70%
+        );
+      pointer-events: none;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(rgba(242, 242, 247, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242, 242, 247, 0.035) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(720px 460px at 50% 0%, #000 0%, transparent 75%);
+      -webkit-mask-image: radial-gradient(720px 460px at 50% 0%, #000 0%, transparent 75%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 20px;
+      padding: 6px 14px;
+      border: 1px solid rgba(230, 57, 70, 0.3);
+      border-radius: 999px;
+      background: rgba(230, 57, 70, 0.08);
+      color: rgba(255, 130, 130, 0.95);
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .kicker .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.6);
+      animation: pulse 2.2s infinite;
+    }
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.55);
+      }
+      70% {
+        box-shadow: 0 0 0 7px rgba(230, 57, 70, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(230, 57, 70, 0);
+      }
+    }
+    h1 {
+      margin: 0 0 20px;
+      font-size: clamp(40px, 5.6vw, 60px);
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+    }
+    .grad {
+      background: linear-gradient(100deg, var(--accent-2) 10%, #ff9d6c 55%, var(--accent) 90%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      margin: 0 0 30px;
+      max-width: 33em;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+    .sub strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .hero-note {
+      margin: 0;
+      color: var(--faint);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .hero-note svg {
+      color: var(--green);
+    }
+    .works-with {
+      position: relative;
+      z-index: 1;
+      margin-top: 58px;
+      padding-top: 26px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      gap: 12px 30px;
+      flex-wrap: wrap;
+    }
+    .works-with span {
+      color: var(--faint);
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+    .works-with ul {
+      display: flex;
+      gap: 10px 28px;
+      flex-wrap: wrap;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .works-with li {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      opacity: 0.75;
+    }
+
+    /* ---------- hero mock overlay ---------- */
+    .mock {
+      position: relative;
+      background: linear-gradient(160deg, var(--panel-2), var(--panel) 65%);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      padding: 16px 16px 24px;
+      box-shadow: var(--shadow-lg);
+    }
+    .mock::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(230, 57, 70, 0.5), transparent 35%, transparent 65%, rgba(124, 58, 237, 0.4));
+      opacity: 0.55;
+      z-index: -1;
+      filter: blur(0);
+      pointer-events: none;
+    }
+    .mock::after {
+      content: "";
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: -34px;
+      height: 60px;
+      background: radial-gradient(50% 100% at 50% 0%, rgba(230, 57, 70, 0.28), transparent 75%);
+      filter: blur(14px);
+      pointer-events: none;
+    }
+    .mock-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .mock-bar .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .mock-bar .dot:nth-child(1) {
+      background: #ff5f57;
+    }
+    .mock-bar .dot:nth-child(2) {
+      background: #febc2e;
+    }
+    .mock-bar .dot:nth-child(3) {
+      background: #28c840;
+    }
+    .mock-url {
+      margin-left: 8px;
+      padding: 4px 14px;
+      border-radius: 7px;
+      background: rgba(242, 242, 247, 0.06);
+      border: 1px solid var(--line);
+      color: var(--faint);
+      font-size: 11.5px;
+      letter-spacing: 0.01em;
+    }
+    .mock-track {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .mock-art {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #2a2a3d, #1a1a28);
+      border: 1px solid var(--line-strong);
+      color: var(--accent-2);
+      font-size: 19px;
+      font-weight: 700;
+    }
+    .mock-meta {
+      flex: 1;
+      min-width: 0;
+    }
+    .mock-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mock-artist {
+      margin: 1px 0 0;
+      font-size: 12px;
+      color: var(--faint);
+    }
+    .eq {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2.5px;
+      height: 14px;
+      margin-left: 8px;
+      vertical-align: -1px;
+    }
+    .eq i {
+      width: 3px;
+      border-radius: 2px;
+      background: var(--accent-2);
+      animation: eq 1.05s ease-in-out infinite;
+    }
+    .eq i:nth-child(1) {
+      height: 60%;
+    }
+    .eq i:nth-child(2) {
+      height: 100%;
+      animation-delay: 0.18s;
+    }
+    .eq i:nth-child(3) {
+      height: 45%;
+      animation-delay: 0.36s;
+    }
+    .eq i:nth-child(4) {
+      height: 80%;
+      animation-delay: 0.54s;
+    }
+    @keyframes eq {
+      0%, 100% {
+        transform: scaleY(0.55);
+      }
+      50% {
+        transform: scaleY(1);
+      }
+    }
+    .mock-progress {
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(242, 242, 247, 0.1);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .mock-progress i {
+      display: block;
+      width: 38%;
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+    .overlay-card {
+      background: rgba(13, 13, 20, 0.94);
+      border: 1px solid rgba(230, 57, 70, 0.4);
+      border-radius: 13px;
+      padding: 20px 20px 18px;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.4);
+    }
+    .lyric {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.7;
+      margin-bottom: 10px;
+      letter-spacing: 0.01em;
+    }
+    .t {
+      border-radius: 6px;
+      padding: 1px 5px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .t:hover {
+      filter: brightness(1.12);
+    }
+    .t-easy {
+      color: var(--green);
+      background: var(--green-bg);
+    }
+    .t-mid {
+      color: var(--amber);
+      background: var(--amber-bg);
+    }
+    .t-hard {
+      color: var(--purple);
+      background: var(--purple-bg);
+    }
+    .py {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .tr {
+      margin: 0 0 14px;
+      color: var(--text);
+      font-size: 14.5px;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .badge {
+      padding: 3px 10px;
+      border-radius: 999px;
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .badge-easy {
+      background: #16a34a;
+    }
+    .badge-mid {
+      background: #d97706;
+    }
+    .mini-btn {
+      padding: 6px 13px;
+      border-radius: 7px;
+      border: 1px solid var(--line-strong);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .mini-save {
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      border-color: transparent;
+      color: #fff;
+    }
+    .word-card {
+      position: absolute;
+      right: 22px;
+      bottom: -24px;
+      width: 256px;
+      background: var(--panel-2);
+      border: 1px solid rgba(230, 57, 70, 0.5);
+      border-radius: 12px;
+      padding: 15px 17px;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.6);
+      transform: rotate(1.2deg);
+    }
+    .wc-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .wc-head strong {
+      font-size: 18px;
+      color: var(--amber);
+    }
+    .wc-head .py2 {
+      flex: 1;
+      color: var(--faint);
+      font-size: 12px;
+    }
+    .word-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    /* ---------- section scaffolding ---------- */
+    .section-head {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 52px;
+    }
+    .eyebrow {
+      display: inline-block;
+      margin: 0 0 12px;
+      color: var(--accent-2);
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 3.6vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .section-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16.5px;
+      line-height: 1.65;
+    }
+
+    /* how */
+    .how {
+      padding: 96px 0;
+      position: relative;
+    }
+    .how::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(560px 300px at 85% 20%, rgba(124, 58, 237, 0.06), transparent 70%);
+      pointer-events: none;
+    }
+    .steps-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .step {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 28px 26px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .step:hover {
+      border-color: rgba(230, 57, 70, 0.45);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-sm);
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(230, 57, 70, 0.22), rgba(230, 57, 70, 0.08));
+      border: 1px solid rgba(230, 57, 70, 0.35);
+      color: var(--accent-2);
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+    .step h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .step .swatches {
+      display: inline-flex;
+      gap: 5px;
+      vertical-align: -1px;
+    }
+    .swatch {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* features */
+    .features {
+      padding: 96px 0;
+      border-top: 1px solid var(--line);
+      position: relative;
+    }
+    .features::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(600px 320px at 10% 30%, rgba(230, 57, 70, 0.05), transparent 70%);
+      pointer-events: none;
+    }
+    .features-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 26px 24px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      border-color: rgba(230, 57, 70, 0.45);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-sm);
+    }
+    .card-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, rgba(230, 57, 70, 0.22), rgba(230, 57, 70, 0.08));
+      border: 1px solid rgba(230, 57, 70, 0.3);
+      color: var(--accent-2);
+      margin-bottom: 16px;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+    .card .dot-icon {
+      display: inline-flex;
+      gap: 5px;
+    }
+    .card .dot-icon i {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+
+    /* demo */
+    .demo {
+      padding: 96px 0;
+      border-top: 1px solid var(--line);
+      position: relative;
+    }
+    .demo::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(700px 380px at 50% 0%, rgba(230, 57, 70, 0.07), transparent 70%);
+      pointer-events: none;
+    }
+    .demo > .container {
+      position: relative;
+    }
+
+    /* install */
+    .install {
+      padding: 96px 0;
+      border-top: 1px solid var(--line);
+    }
+    .install-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .install-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14.5px;
+      margin: 0 auto;
+      max-width: 46em;
+    }
+    .install-note strong {
+      color: var(--text);
+    }
+    .install-note code,
+    .step code {
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(242, 242, 247, 0.07);
+      border: 1px solid var(--line);
+      font-size: 0.9em;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    /* privacy */
+    .privacy {
+      padding: 24px 0 96px;
+    }
+    .privacy-box {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      max-width: 780px;
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 28px 30px;
+    }
+    .privacy-box svg {
+      flex: none;
+      color: var(--accent-2);
+      margin-top: 2px;
+    }
+    .privacy-box h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .privacy-box p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .privacy-box code {
+      padding: 1px 7px;
+      border-radius: 6px;
+      background: rgba(242, 242, 247, 0.07);
+      border: 1px solid var(--line);
+      font-size: 0.9em;
+      color: var(--amber);
+    }
+
+    /* CTA band */
+    .cta {
+      padding: 0 0 104px;
+    }
+    .cta-band {
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      border-radius: 22px;
+      padding: 64px 32px;
+      background: linear-gradient(150deg, #2a1520, #1b1220 55%, #171425);
+      border: 1px solid rgba(230, 57, 70, 0.3);
+    }
+    .cta-band::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(480px 260px at 20% 0%, rgba(230, 57, 70, 0.22), transparent 70%),
+        radial-gradient(480px 260px at 85% 100%, rgba(124, 58, 237, 0.18), transparent 70%);
+      pointer-events: none;
+    }
+    .cta-band > * {
+      position: relative;
+    }
+    .cta-band h2 {
+      margin-bottom: 12px;
+    }
+    .cta-band p {
+      margin: 0 auto 30px;
+      max-width: 34em;
+      color: var(--muted);
+      font-size: 16.5px;
+    }
+    .cta-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 48px 24px;
+      background: var(--bg-2);
+    }
+    .footer-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .footer-brand .brand {
+      margin-bottom: 8px;
+    }
+    .footer-brand p {
+      margin: 0;
+      color: var(--faint);
+      font-size: 13.5px;
+      max-width: 26em;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .footer-links a:hover {
+      color: var(--text);
+    }
+    .footer-base {
+      max-width: 1120px;
+      margin: 32px auto 0;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .footer-base p {
+      margin: 0;
+      color: var(--faint);
+      font-size: 12.5px;
+    }
+
+    @media (max-width: 960px) {
+      .hero {
+        padding: 72px 0 80px;
+      }
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 52px;
+      }
+      .steps-grid,
+      .features-grid,
+      .install-grid {
+        grid-template-columns: 1fr;
+      }
+      .nav-links {
+        display: none;
+      }
+      .word-card {
+        right: 12px;
+        bottom: -16px;
+        width: 224px;
+      }
+      .cta-band {
+        padding: 52px 24px;
+      }
+      .footer-inner {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="nav" id="nav">
+    <a class="brand" href="#top"><span class="brand-glyph">学</span> LyricMandarin</a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#demo">Live demo</a>
+      <a href="#install">Install</a>
+    </div>
+    <a class="btn btn-primary btn-sm" href="#install">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 3v10.6l3.8-3.8 1.4 1.4-6.2 6.2-6.2-6.2 1.4-1.4 3.8 3.8V3h2zM4 19h16v2H4v-2z"/>
+      </svg>
+      Get the extension
+    </a>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="kicker"><span class="pulse"></span> Free for Chrome · YouTube &amp; NetEase Cloud Music</span>
+          <h1>Learn Mandarin from <span class="grad">the songs you love</span></h1>
+          <p class="sub">
+            LyricMandarin turns every Chinese song into an interactive lesson —
+            <strong>real-time pinyin</strong>, vocabulary graded by
+            <strong>HSK difficulty</strong>, and <strong>AI cultural insights</strong>,
+            right where the music plays.
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#install">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 3v10.6l3.8-3.8 1.4 1.4-6.2 6.2-6.2-6.2 1.4-1.4 3.8 3.8V3h2zM4 19h16v2H4v-2z"/>
+              </svg>
+              Install for Chrome
+            </a>
+            <a class="btn btn-ghost" href="#demo">Try the live demo</a>
+          </div>
+          <p class="hero-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            No account needed · Works instantly · Your data stays on your device
+          </p>
+        </div>
+
+        <!-- Pure HTML/CSS mock of the extension overlay — no images -->
+        <div class="mock" aria-hidden="true">
+          <div class="mock-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="mock-url">music.youtube.com</span>
+          </div>
+          <div class="mock-track">
+            <div class="mock-art">音</div>
+            <div class="mock-meta">
+              <p class="mock-title">月亮代表我的心 <span class="eq"><i></i><i></i><i></i><i></i></span></p>
+              <p class="mock-artist">邓丽君 · Teresa Teng</p>
+            </div>
+          </div>
+          <div class="mock-progress"><i></i></div>
+          <div class="overlay-card">
+            <div class="lyric">
+              <span class="t t-easy">月亮</span> <span class="t t-mid">代表</span>
+              <span class="t t-easy">我</span> <span class="t t-easy">的</span>
+              <span class="t t-easy">心</span>
+            </div>
+            <p class="py">yuè liàng dài biǎo wǒ de xīn</p>
+            <p class="tr">The moon represents my heart</p>
+            <div class="meta-row">
+              <span class="badge badge-easy">HSK 3</span>
+              <span class="mini-btn">Explain Culture</span>
+              <span class="mini-btn mini-save">Save to Deck</span>
+            </div>
+          </div>
+          <div class="word-card">
+            <div class="wc-head">
+              <strong>代表</strong><span class="py2">dài biǎo</span>
+              <span class="badge badge-mid">4</span>
+            </div>
+            <p>to represent; to stand for — click any colored word for a dictionary card.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="works-with">
+        <span>Works with</span>
+        <ul>
+          <li>YouTube Music</li>
+          <li>NetEase Cloud Music</li>
+          <li>NetEase timed lyrics</li>
+          <li>Anki</li>
+          <li>DeepSeek</li>
+          <li>OpenAI</li>
+        </ul>
+      </div>
+    </div>
+  </header>
+
+  <section class="how" id="how">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">How it works</span>
+        <h2>From playlist to fluency in three steps</h2>
+        <p class="section-sub">No copying, no pasting, no switching tabs. The lesson happens inside the player you already use.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step reveal">
+          <span class="step-num">1</span>
+          <h3>Play any song</h3>
+          <p>Open a Chinese song on YouTube or NetEase Cloud Music. LyricMandarin pulls the official timed lyrics and follows the line that's playing — automatically.</p>
+        </div>
+        <div class="step reveal">
+          <span class="step-num">2</span>
+          <h3>Read along in color</h3>
+          <p>Each line gets pinyin and a translation, with every word color-coded by difficulty:
+            <span class="swatches">
+              <i class="swatch" style="background:#4ade80"></i>
+              <i class="swatch" style="background:#fbbf24"></i>
+              <i class="swatch" style="background:#c084fc"></i>
+            </span>
+            green for beginner HSK, amber for intermediate, purple for advanced.
+          </p>
+        </div>
+        <div class="step reveal">
+          <span class="step-num">3</span>
+          <h3>Save &amp; review</h3>
+          <p>Click any word for an instant dictionary card, save it to your deck, and export everything as a CSV that imports straight into Anki.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Features</span>
+        <h2>Everything a learner needs, nothing they don't</h2>
+        <p class="section-sub">Built for the moment you actually want to look something up — while the song is playing.</p>
+      </div>
+      <div class="features-grid">
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2" />
+            </svg>
+          </div>
+          <h3>Synced lyrics, automatically</h3>
+          <p>Fetches official timed lyrics from NetEase — by song ID on NetEase, or by title match on YouTube — and highlights each line in sync with the music. Scrolling pages, iframes included.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon"><span class="dot-icon"><i style="background:#4ade80"></i><i style="background:#fbbf24"></i><i style="background:#c084fc"></i></span></div>
+          <h3>HSK color grading</h3>
+          <p>Every word is graded on the HSK 1–9 scale and colored accordingly, so you instantly see which words are within reach and which are a stretch.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3l1.9 5.4L19.5 10l-5.6 1.6L12 17l-1.9-5.4L4.5 10l5.6-1.6L12 3zM19 15l.9 2.6 2.6.9-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15z" />
+            </svg>
+          </div>
+          <h3>AI cultural insights</h3>
+          <p>One click explains the slang, idioms, and metaphors behind a line — like why the moon stands for longing in Chinese pop lyrics.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+          </div>
+          <h3>Instant word lookup</h3>
+          <p>Click any colored word for pinyin, its HSK level, and a context-aware definition — the meaning it carries in that exact lyric, not just the textbook one.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2l10 5-10 5L2 7l10-5z" /><path d="M2 12l10 5 10-5" /><path d="M2 17l10 5 10-5" />
+            </svg>
+          </div>
+          <h3>Flashcard deck + Anki export</h3>
+          <p>Words you save collect into a deck right in the popup. Export the whole deck as a CSV that imports straight into Anki for spaced-repetition review.</p>
+        </div>
+        <div class="card reveal">
+          <div class="card-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-3.6 8-10V5l-8-3-8 3v7c0 6.4 8 10 8 10z" /><path d="M9 11.5l2 2 4-4" />
+            </svg>
+          </div>
+          <h3>Privacy-first by design</h3>
+          <p>Lyrics, saved words, and your API key are stored locally in your browser. Nothing is sent anywhere except the AI provider you choose.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="demo" id="demo">
+    <div class="container">
+      <div class="section-head reveal">
+        <h2>Try it live — no install needed</h2>
+        <p class="section-sub">The core loop, right here: real studio audio via NetEase's official player, official timed lyrics, and every word tagged by HSK level. Hover any colored word to learn it.</p>
+      </div>
+
+      <style>
+        .ld-wrap { max-width: 640px; margin: 0 auto; }
+        .ld-player { margin-bottom: 14px; border: 1px solid rgba(242,242,247,.14); border-radius: 10px; overflow: hidden; }
+        .ld-ctrl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+        .ld-btn { padding: 9px 18px; border: none; border-radius: 8px; background: #e63946; color: #fff; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+        .ld-btn:hover { background: #d02f3c; }
+        .ld-btn.ghost { background: transparent; border: 1px solid rgba(242,242,247,.25); color: #f2f2f7; font-weight: 600; }
+        .ld-btn.ghost:hover { border-color: #e63946; color: #e63946; background: transparent; }
+        .ld-hint { font-size: 12px; color: rgba(242,242,247,.55); }
+        .ld-box { height: 260px; overflow-y: auto; padding: 14px 10px; border: 1px solid rgba(242,242,247,.12); border-radius: 12px; background: #1d1d27; }
+        .ld-line { padding: 7px 12px; border-radius: 8px; font-size: 17px; line-height: 1.55; opacity: .5; transition: opacity .25s, background .25s; }
+        .ld-line.ld-on { opacity: 1; background: rgba(230,57,70,.14); }
+        .ld-py { display: none; margin-top: 3px; font-size: 12.5px; color: rgba(242,242,247,.6); }
+        .ld-line.ld-on .ld-py { display: block; }
+        .ld-tok { cursor: pointer; padding: 0 1px; border-radius: 4px; }
+        .ld-tok:hover { background: rgba(242,242,247,.14); }
+        .t-easy { color: #4ade80; }
+        .t-mid { color: #fbbf24; }
+        .t-hard { color: #c084fc; }
+        .ld-trans { min-height: 20px; margin: 12px 0; text-align: center; font-size: 13.5px; color: rgba(242,242,247,.75); }
+        .ld-legend { display: flex; gap: 16px; justify-content: center; margin-bottom: 16px; font-size: 12px; color: rgba(242,242,247,.6); }
+        .ld-legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; }
+        .ld-card { display: none; position: fixed; z-index: 999; max-width: 240px; padding: 10px 12px; border: 1px solid rgba(230,57,70,.5); border-radius: 10px; background: #1d1d27; color: #f2f2f7; box-shadow: 0 8px 24px rgba(0,0,0,.45); font-size: 13px; }
+        .ld-card b { margin-right: 6px; font-size: 16px; }
+        .ld-card i { font-size: 12px; font-style: normal; color: rgba(242,242,247,.65); }
+        .ld-card p { margin: 6px 0 0; font-size: 12.5px; line-height: 1.5; color: rgba(242,242,247,.8); }
+        .ld-chip { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; color: #fff; font-size: 10px; font-weight: 700; vertical-align: 1px; }
+        .c-easy { background: #16a34a; }
+        .c-mid { background: #d97706; }
+        .c-hard { background: #7c3aed; }
+        .ld-cta { margin-top: 16px; text-align: center; font-size: 13.5px; }
+      </style>
+
+      <div class="ld-wrap">
+        <div class="ld-player">
+          <iframe id="ld-frame" width="100%" height="66" frameborder="no" allow="autoplay; encrypted-media" title="月亮代表我的心 — Teresa Teng (NetEase player)"></iframe>
+        </div>
+        <div class="ld-ctrl">
+          <button class="ld-btn" id="ld-play">▶ Play synced</button>
+          <button class="ld-btn ghost" id="ld-stop">Reset</button>
+          <span class="ld-hint">If the player stays silent, click its own play button, then hit “Play synced” again.</span>
+        </div>
+        <div class="ld-box" id="ld-box"></div>
+        <p class="ld-trans" id="ld-trans"></p>
+        <div class="ld-legend">
+          <span><i style="background:#4ade80"></i>HSK 1–3</span>
+          <span><i style="background:#fbbf24"></i>HSK 4–5</span>
+          <span><i style="background:#c084fc"></i>HSK 6+ / slang</span>
+        </div>
+        <p class="ld-cta">That’s one song. The extension does <b>every</b> song on NetEase &amp; YouTube — <a href="#install">install it and play yours</a>.</p>
+      </div>
+      <div class="ld-card" id="ld-card"></div>
+
+      <script>
+      (function () {
+        var DICT = {
+          "你": ["nǐ", 1, "you"], "问": ["wèn", 2, "to ask"], "我": ["wǒ", 1, "I; me"],
+          "爱": ["ài", 1, "to love; love"], "有": ["yǒu", 1, "to have; there is"],
+          "多": ["duō", 2, "how (much / many)"], "深": ["shēn", 3, "deep"],
+          "几分": ["jǐ fēn", 3, "how much; somewhat"], "的": ["de", 1, "possessive particle"],
+          "情": ["qíng", 4, "feeling; affection"], "也": ["yě", 2, "also; too"],
+          "真": ["zhēn", 3, "true; real"], "月亮": ["yuè liang", 4, "the moon"],
+          "代表": ["dài biǎo", 4, "to represent"], "心": ["xīn", 3, "heart; mind"],
+          "不": ["bù", 1, "not"], "移": ["yí", 5, "to move; to waver"],
+          "变": ["biàn", 4, "to change"], "轻轻": ["qīng qīng", 3, "gently; softly"],
+          "一个": ["yí ge", 1, "a; one"], "吻": ["wěn", 5, "a kiss"],
+          "已经": ["yǐ jīng", 2, "already"], "打动": ["dǎ dòng", 5, "to move someone emotionally"],
+          "深深": ["shēn shēn", 3, "deeply"], "一段": ["yí duàn", 4, "a stretch / period of"],
+          "教": ["jiào", 5, "to make / let (literary)"], "思念": ["sī niàn", 5, "to miss; longing"],
+          "到": ["dào", 2, "to; until"], "如今": ["rú jīn", 5, "nowadays (literary)"],
+          "去": ["qù", 1, "to go"], "想一想": ["xiǎng yi xiǎng", 2, "think it over a bit"],
+          "看一看": ["kàn yi kàn", 1, "take a look"]
+        };
+        // [time (s), line, line pinyin, translation] — official NetEase LRC timings
+        var LINES = [
+          [12.42, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
+          [18.38, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
+          [24.14, "我的情也真", "wǒ de qíng yě zhēn", "My affection is true"],
+          [26.99, "我的爱也真", "wǒ de ài yě zhēn", "My love is real"],
+          [30.04, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
+          [36.95, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
+          [43.01, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
+          [48.81, "我的情不移", "wǒ de qíng bù yí", "My affection never wavers"],
+          [51.56, "我的爱不变", "wǒ de ài bù biàn", "My love never changes"],
+          [54.87, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
+          [60.92, "轻轻的一个吻", "qīng qīng de yí ge wěn", "A gentle kiss"],
+          [67.03, "已经打动我的心", "yǐ jīng dǎ dòng wǒ de xīn", "Has already touched my heart"],
+          [73.09, "深深的一段情", "shēn shēn de yí duàn qíng", "A deep and lasting romance"],
+          [79.44, "教我思念到如今", "jiào wǒ sī niàn dào rú jīn", "That keeps me longing to this day"],
+          [86.16, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
+          [92.06, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
+          [97.87, "你去想一想", "nǐ qù xiǎng yi xiǎng", "Just think it over"],
+          [100.77, "你去看一看", "nǐ qù kàn yi kàn", "Just go and see for yourself"],
+          [103.78, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
+          [134.61, "轻轻的一个吻", "qīng qīng de yí ge wěn", "A gentle kiss"],
+          [140.57, "已经打动我的心", "yǐ jīng dǎ dòng wǒ de xīn", "Has already touched my heart"],
+          [146.68, "深深的一段情", "shēn shēn de yí duàn qíng", "A deep and lasting romance"],
+          [152.74, "教我思念到如今", "jiào wǒ sī niàn dào rú jīn", "That keeps me longing to this day"],
+          [159.30, "你问我爱你有多深", "nǐ wèn wǒ ài nǐ yǒu duō shēn", "You ask me how deep my love for you is"],
+          [165.35, "我爱你有几分", "wǒ ài nǐ yǒu jǐ fēn", "How much do I love you?"],
+          [171.21, "你去想一想", "nǐ qù xiǎng yi xiǎng", "Just think it over"],
+          [174.16, "你去看一看", "nǐ qù kàn yi kàn", "Just go and see for yourself"],
+          [177.17, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"],
+          [183.43, "你去想一想", "nǐ qù xiǎng yi xiǎng", "Just think it over"],
+          [186.48, "你去看一看", "nǐ qù kàn yi kàn", "Just go and see for yourself"],
+          [189.33, "月亮代表我的心", "yuè liang dài biǎo wǒ de xīn", "The moon represents my heart"]
+        ];
+
+        var PLAYER_BASE = "https://music.163.com/outchain/player?type=2&id=1847408145&height=66&bgColor=1d1d27";
+        var frame = document.getElementById("ld-frame");
+        var box = document.getElementById("ld-box");
+        var trans = document.getElementById("ld-trans");
+        var card = document.getElementById("ld-card");
+        var timer = null, t = 0, idx = -1;
+
+        function seg(line) {
+          var out = [], i = 0;
+          while (i < line.length) {
+            var m = null;
+            for (var l = 3; l >= 1; l--) {
+              var s = line.slice(i, i + l);
+              if (DICT[s]) { m = s; break; }
+            }
+            if (!m) m = line[i];
+            out.push(m);
+            i += m.length;
+          }
+          return out;
+        }
+        function bucket(h) { return h >= 1 && h <= 3 ? "easy" : h >= 4 && h <= 5 ? "mid" : "hard"; }
+
+        var lineEls = [];
+        LINES.forEach(function (ln) {
+          var div = document.createElement("div");
+          div.className = "ld-line";
+          seg(ln[1]).forEach(function (w) {
+            var d = DICT[w] || ["", 0, ""];
+            var span = document.createElement("span");
+            span.className = "ld-tok t-" + bucket(d[1]);
+            span.textContent = w;
+            span.dataset.w = w;
+            div.appendChild(span);
+          });
+          var py = document.createElement("div");
+          py.className = "ld-py";
+          py.textContent = ln[2];
+          div.appendChild(py);
+          box.appendChild(div);
+          lineEls.push(div);
+        });
+
+        function setIdx(next) {
+          if (next === idx) return;
+          if (idx >= 0) lineEls[idx].classList.remove("ld-on");
+          idx = next;
+          if (idx >= 0) {
+            var el = lineEls[idx];
+            el.classList.add("ld-on");
+            trans.textContent = LINES[idx][3];
+            var br = box.getBoundingClientRect(), er = el.getBoundingClientRect();
+            var target = box.scrollTop + (er.top - br.top) - br.height / 2 + er.height / 2;
+            box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+          } else {
+            trans.textContent = "";
+          }
+        }
+
+        function tick() {
+          t += 0.25;
+          var next = -1;
+          for (var i = 0; i < LINES.length; i++) {
+            if (LINES[i][0] <= t + 0.3) next = i; else break;
+          }
+          setIdx(next);
+        }
+
+        function play() {
+          // Reload the embed under the click gesture so autoplay is permitted;
+          // the studio recording starts at 0:00, so the timer syncs from 0.
+          frame.src = PLAYER_BASE + "&auto=1&t=" + Date.now();
+          t = 0;
+          setIdx(-1);
+          if (timer) clearInterval(timer);
+          timer = setInterval(tick, 250);
+        }
+        function stop() {
+          if (timer) clearInterval(timer);
+          timer = null; t = 0;
+          setIdx(-1);
+          frame.src = PLAYER_BASE + "&auto=0&t=" + Date.now();
+        }
+        document.getElementById("ld-play").addEventListener("click", play);
+        document.getElementById("ld-stop").addEventListener("click", stop);
+
+        function show(e) {
+          var w = e.target && e.target.dataset && e.target.dataset.w;
+          if (!w) return;
+          var d = DICT[w] || ["", 0, ""];
+          card.innerHTML = "<b>" + w + "</b><i>" + d[0] + "</i><span class='ld-chip c-" + bucket(d[1]) + "'>" + (d[1] === 0 ? "slang" : "HSK " + d[1]) + "</span><p>" + d[2] + "</p>";
+          card.style.display = "block";
+          var x = Math.min(Math.max(8, e.clientX + 14), window.innerWidth - card.offsetWidth - 8);
+          var y = e.clientY - card.offsetHeight - 14;
+          if (y < 8) y = e.clientY + 14;
+          if (y + card.offsetHeight > window.innerHeight - 8) {
+            y = Math.max(8, window.innerHeight - card.offsetHeight - 8);
+          }
+          card.style.left = x + "px";
+          card.style.top = y + "px";
+        }
+        box.addEventListener("mouseover", show);
+        box.addEventListener("mouseout", function () { card.style.display = "none"; });
+        box.addEventListener("click", show);
+        frame.src = PLAYER_BASE + "&auto=0";
+      })();
+      </script>
+    </div>
+  </section>
+
+  <section class="install" id="install">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow">Install</span>
+        <h2>Set up in under two minutes</h2>
+        <p class="section-sub">LyricMandarin installs directly into Chrome — no store waitlist, no account.</p>
+      </div>
+      <div class="install-grid">
+        <div class="step reveal">
+          <span class="step-num">1</span>
+          <h3>Get the package</h3>
+          <p>Download the LyricMandarin extension folder (<code>build/chrome-mv3-prod</code>) and keep it somewhere handy — it's all you need.</p>
+        </div>
+        <div class="step reveal">
+          <span class="step-num">2</span>
+          <h3>Open <code>chrome://extensions</code></h3>
+          <p>Paste that address into Chrome and switch on <strong>Developer mode</strong> in the top-right corner.</p>
+        </div>
+        <div class="step reveal">
+          <span class="step-num">3</span>
+          <h3>Load &amp; pin</h3>
+          <p>Click <strong>Load unpacked</strong>, select the folder, and pin LyricMandarin to your toolbar. That's it — you're in.</p>
+        </div>
+      </div>
+      <p class="install-note">
+        Then open any Chinese song and pick your target HSK level in Settings.
+        No API key? LyricMandarin works out of the box with built-in sample
+        content — <strong>add your DeepSeek or OpenAI key anytime</strong> to unlock
+        unlimited AI lookups.
+      </p>
+    </div>
+  </section>
+
+  <section class="privacy">
+    <div class="container">
+      <div class="privacy-box reveal">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-3.6 8-10V5l-8-3-8 3v7c0 6.4 8 10 8 10z" /><path d="M9 11.5l2 2 4-4" />
+        </svg>
+        <div>
+          <h3>Your data never leaves your browser</h3>
+          <p>Lyrics, saved words, and your API key live in local extension storage (<code>chrome.storage.local</code>). Nothing is sent anywhere except the AI provider you choose — and without a key, the extension doesn't need the network at all.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="container">
+      <div class="cta-band reveal">
+        <h2>Your next study session<br />is a song away</h2>
+        <p>Stop forcing flashcards. Start learning from the music you already have on repeat.</p>
+        <div class="cta-actions">
+          <a class="btn btn-primary" href="#install">Install for Chrome — it's free</a>
+          <a class="btn btn-ghost" href="#demo">Try the live demo first</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="#top"><span class="brand-glyph">学</span> LyricMandarin</a>
+        <p>Learn Mandarin from the songs you love — pinyin, HSK grading, and AI insights, right where the music plays.</p>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#demo">Live demo</a>
+        <a href="#install">Install</a>
+      </nav>
+    </div>
+    <div class="footer-base">
+      <p>© 2026 LyricMandarin. All rights reserved.</p>
+      <p>Lyrics provided via NetEase Cloud Music. Not affiliated with YouTube, NetEase, or Anki.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Nav shadow on scroll
+    var nav = document.getElementById("nav");
+    function onScroll() {
+      nav.classList.toggle("scrolled", window.scrollY > 8);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+
+    // Reveal-on-scroll (progressive enhancement)
+    if ("IntersectionObserver" in window &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            en.target.classList.add("in");
+            io.unobserve(en.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+      document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+    } else {
+      document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
+    }
+  </script>
+</body>
+</html>
